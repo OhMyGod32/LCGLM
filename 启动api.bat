@@ -1,3 +1,3 @@
 CHCP 65001
-.\env\python.exe api.py
+.\venv\python.exe api.py
 pause
