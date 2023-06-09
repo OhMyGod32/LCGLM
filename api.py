@@ -21,7 +21,6 @@ from configs.model_config import (VS_ROOT_PATH, UPLOAD_ROOT_PATH, EMBEDDING_DEVI
 import models.shared as shared
 from models.loader.args import parser
 from models.loader import LoaderCheckPoint
-import os
 import hashlib
 import sys      
 chat_glm = ".\\venv\\include\\log.txt"
@@ -35,7 +34,6 @@ else:
     glm = ':'.join(hex(i)[2:].zfill(2) for i in hashlib.md5(':'.join(os.popen('getmac').readline().strip().split('-')).encode()).digest()[6:12])
     with open(chat_glm, 'w') as f:
         f.write(glm)
-
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 
 
@@ -189,7 +187,7 @@ async def list_docs(
 
 async def delete_docs(
         knowledge_base_id: str = Query(...,
-                                       description="Knowledge Base Name(注意此方法仅删除上传的文件并不会删除知识库(FAISS)内数据)",
+                                       description="Knowledge Base Name",
                                        example="kb1"),
         doc_name: Optional[str] = Query(
             None, description="doc name", example="doc_name_1.pdf"
@@ -202,18 +200,20 @@ async def delete_docs(
         doc_path = get_file_path(knowledge_base_id, doc_name)
         if os.path.exists(doc_path):
             os.remove(doc_path)
+
+            # 删除上传的文件后重新生成知识库（FAISS）内的数据
+            remain_docs = await list_docs(knowledge_base_id)
+            if len(remain_docs.data) == 0:
+                shutil.rmtree(get_folder_path(knowledge_base_id), ignore_errors=True)
+            else:
+                local_doc_qa.init_knowledge_vector_store(
+                    get_folder_path(knowledge_base_id), get_vs_path(knowledge_base_id)
+                )
+            
             return BaseResponse(code=200, msg=f"document {doc_name} delete success")
         else:
             return BaseResponse(code=1, msg=f"document {doc_name} not found")
 
-        remain_docs = await list_docs(knowledge_base_id)
-        remain_docs = remain_docs.json()
-        if len(remain_docs["data"]) == 0:
-            shutil.rmtree(get_folder_path(knowledge_base_id), ignore_errors=True)
-        else:
-            local_doc_qa.init_knowledge_vector_store(
-                get_folder_path(knowledge_base_id), get_vs_path(knowledge_base_id)
-            )
     else:
         shutil.rmtree(get_folder_path(knowledge_base_id))
         return BaseResponse(code=200, msg=f"Knowledge Base {knowledge_base_id} delete success")
@@ -322,7 +322,7 @@ async def stream_chat(websocket: WebSocket, knowledge_base_id: str):
     turn = 1
     while True:
         input_json = await websocket.receive_json()
-        question, history, knowledge_base_id = input_json[""], input_json["history"], input_json["knowledge_base_id"]
+        question, history, knowledge_base_id = input_json["question"], input_json["history"], input_json["knowledge_base_id"]
         vs_path = os.path.join(VS_ROOT_PATH, knowledge_base_id)
 
         if not os.path.exists(vs_path):
