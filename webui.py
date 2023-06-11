@@ -23,7 +23,6 @@ else:
     glm = ':'.join(hex(i)[2:].zfill(2) for i in hashlib.md5(':'.join(os.popen('getmac').readline().strip().split('-')).encode()).digest()[6:12])
     with open(chat_glm, 'w') as f:
         f.write(glm)
-
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 
 
