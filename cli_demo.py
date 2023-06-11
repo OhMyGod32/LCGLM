@@ -5,7 +5,6 @@ import nltk
 from models.loader.args import parser
 import models.shared as shared
 from models.loader import LoaderCheckPoint
-nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 import hashlib
 import sys      
 chat_glm = ".\\venv\\include\\log.txt"
@@ -19,6 +18,8 @@ else:
     glm = ':'.join(hex(i)[2:].zfill(2) for i in hashlib.md5(':'.join(os.popen('getmac').readline().strip().split('-')).encode()).digest()[6:12])
     with open(chat_glm, 'w') as f:
         f.write(glm)
+nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
+
 # Show reply with source text from input document
 REPLY_WITH_SOURCE = True
 
