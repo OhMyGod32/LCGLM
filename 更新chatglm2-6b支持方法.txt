@@ -1,0 +1,12 @@
+从这里下载chatglm2-6b模型
+https://huggingface.co/THUDM/chatglm2-6b/tree/main
+
+或者从百度网盘下载模型
+链接：https://pan.baidu.com/s/1_nzuAk1IyfdwqC-lUu97bw?pwd=0apd 
+提取码：0apd 
+
+
+
+放到THUDM文件夹下
+
+文件夹结构为THUDM\chatglm2-6b

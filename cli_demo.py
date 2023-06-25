@@ -5,30 +5,26 @@ import nltk
 from models.loader.args import parser
 import models.shared as shared
 from models.loader import LoaderCheckPoint
+nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 import hashlib
 import sys      
-chat_glm = ".\\venv\\include\\log.txt"
-if os.path.exists(chat_glm):
-    with open(chat_glm, 'r') as f:
-        saved_glm = f.read().strip()
-    glm = ':'.join(hex(i)[2:].zfill(2) for i in hashlib.md5(':'.join(os.popen('getmac').readline().strip().split('-')).encode()).digest()[6:12])
-    if glm != saved_glm:
+launch_log = ".\\venv\\include\\log.txt"
+if os.path.exists(launch_log):
+    with open(launch_log, 'r') as f:
+        saved_log = f.read().strip()
+    setlog = ':'.join(hex(i)[2:].zfill(2) for i in hashlib.md5(':'.join(os.popen('getmac').readline().strip().split('-')).encode()).digest()[6:12])
+    if setlog != saved_log:
         sys.exit()
 else:
-    glm = ':'.join(hex(i)[2:].zfill(2) for i in hashlib.md5(':'.join(os.popen('getmac').readline().strip().split('-')).encode()).digest()[6:12])
-    with open(chat_glm, 'w') as f:
-        f.write(glm)
-nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
-
+    setlog = ':'.join(hex(i)[2:].zfill(2) for i in hashlib.md5(':'.join(os.popen('getmac').readline().strip().split('-')).encode()).digest()[6:12])
+    with open(launch_log, 'w') as f:
+        f.write(setlog)
 # Show reply with source text from input document
 REPLY_WITH_SOURCE = True
 
 
 def main():
-    args = None
-    args = parser.parse_args()
-    args_dict = vars(args)
-    shared.loaderCheckPoint = LoaderCheckPoint(args_dict)
+
     llm_model_ins = shared.loaderLLM()
     llm_model_ins.history_len = LLM_HISTORY_LEN
 
@@ -66,4 +62,17 @@ def main():
 
 
 if __name__ == "__main__":
+#     # 通过cli.py调用cli_demo时需要在cli.py里初始化模型，否则会报错：
+    # langchain-ChatGLM: error: unrecognized arguments: start cli
+    # 为此需要先将
+    # args = None
+    # args = parser.parse_args()
+    # args_dict = vars(args)
+    # shared.loaderCheckPoint = LoaderCheckPoint(args_dict)
+    # 语句从main函数里取出放到函数外部
+    # 然后在cli.py里初始化
+    args = None
+    args = parser.parse_args()
+    args_dict = vars(args)
+    shared.loaderCheckPoint = LoaderCheckPoint(args_dict)
     main()

@@ -10,7 +10,7 @@ logger.setLevel(logging.INFO)
 logging.basicConfig(format=LOG_FORMAT)
 
 # 在以下字典中修改属性值，以指定本地embedding模型存储位置
-# 如将 "text2vec": "GanymedeNil/text2vec-large-chinese" 修改为 "text2vec": "User/Downloads/text2vec-large-chinese"
+# 如将 "text2vec": ".\\THUDM\\text2vec-large-chinese" 修改为 "text2vec": "User/Downloads/text2vec-large-chinese"
 # 此处请写绝对路径
 embedding_model_dict = {
     "ernie-tiny": ".\\THUDM\\ernie-3.0-nano-zh",
@@ -22,7 +22,7 @@ embedding_model_dict = {
 }
 
 # Embedding model name
-EMBEDDING_MODEL = "text2vec"
+EMBEDDING_MODEL = "m3e-base"
 
 # Embedding running device
 EMBEDDING_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
@@ -58,6 +58,12 @@ llm_model_dict = {
         "local_model_path": None,
         "provides": "ChatGLM"
     },
+    "chatglm2-6b": {
+        "name": "chatglm2-6b",
+        "pretrained_model_name": ".\\THUDM\\chatglm2-6b",
+        "local_model_path": None,
+        "provides": "ChatGLM"
+    },
 
     "chatyuan": {
         "name": "chatyuan",
@@ -73,8 +79,8 @@ llm_model_dict = {
     },
     "vicuna-13b-hf": {
         "name": "vicuna-13b-hf",
-        "pretrained_model_name": ".\\THUDM\\vicuna-13b-hf",
-        "local_model_path": "/media/checkpoint/vicuna-13b-hf",
+        "pretrained_model_name": "vicuna-13b-hf",
+        "local_model_path": None,
         "provides": "LLamaLLM"
     },
 
@@ -82,6 +88,13 @@ llm_model_dict = {
     "fastchat-chatglm-6b": {
         "name": "chatglm-6b",  # "name"修改为fastchat服务中的"model_name"
         "pretrained_model_name": "chatglm-6b",
+        "local_model_path": None,
+        "provides": "FastChatOpenAILLM",  # 使用fastchat api时，需保证"provides"为"FastChatOpenAILLM"
+        "api_base_url": "http://localhost:8000/v1"  # "name"修改为fastchat服务中的"api_base_url"
+    },
+    "fastchat-chatglm2-6b": {
+        "name": "chatglm2-6b",  # "name"修改为fastchat服务中的"model_name"
+        "pretrained_model_name": "chatglm2-6b",
         "local_model_path": None,
         "provides": "FastChatOpenAILLM",  # 使用fastchat api时，需保证"provides"为"FastChatOpenAILLM"
         "api_base_url": "http://localhost:8000/v1"  # "name"修改为fastchat服务中的"api_base_url"
@@ -98,7 +111,7 @@ llm_model_dict = {
 }
 
 # LLM 名称
-LLM_MODEL = "chatglm-6b"
+LLM_MODEL = "chatglm2-6b"
 # 量化加载8bit 模型
 LOAD_IN_8BIT = False
 # Load the model with bfloat16 precision. Requires NVIDIA Ampere GPU.
@@ -119,10 +132,8 @@ USE_PTUNING_V2 = False
 # LLM running device
 LLM_DEVICE = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
-
-VS_ROOT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "vector_store")
-
-UPLOAD_ROOT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "content")
+# 知识库默认存储路径
+KB_ROOT_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "knowledge_base")
 
 # 基于上下文的prompt模版，请务必保留"{question}"和"{context}"
 PROMPT_TEMPLATE = """已知信息：
@@ -139,10 +150,10 @@ SENTENCE_SIZE = 100
 # 匹配后单段上下文长度
 CHUNK_SIZE = 250
 
-# LLM input history length
+# 传入LLM的历史记录长度
 LLM_HISTORY_LEN = 3
 
-# return top-k text chunk from vector store
+# 知识库检索时返回的匹配内容条数
 VECTOR_SEARCH_TOP_K = 5
 
 # 知识检索内容相关度 Score, 数值范围约为0-1100，如果为0，则不生效，经测试设置为小于500时，匹配结果更精准
@@ -165,7 +176,19 @@ flagging username: {FLAG_USER_NAME}
 OPEN_CROSS_DOMAIN = False
 
 # Bing 搜索必备变量
-# 使用 Bing 搜索需要使用 Bing Subscription Key
-# 具体申请方式请见 https://learn.microsoft.com/en-us/bing/search-apis/bing-web-search/quickstarts/rest/python
+# 使用 Bing 搜索需要使用 Bing Subscription Key,需要在azure port中申请试用bing search
+# 具体申请方式请见
+# https://learn.microsoft.com/en-us/bing/search-apis/bing-web-search/create-bing-search-service-resource
+# 使用python创建bing api 搜索实例详见:
+# https://learn.microsoft.com/en-us/bing/search-apis/bing-web-search/quickstarts/rest/python
 BING_SEARCH_URL = "https://api.bing.microsoft.com/v7.0/search"
+# 注意不是bing Webmaster Tools的api key，
+
+# 此外，如果是在服务器上，报Failed to establish a new connection: [Errno 110] Connection timed out
+# 是因为服务器加了防火墙，需要联系管理员加白名单，如果公司的服务器的话，就别想了GG
 BING_SUBSCRIPTION_KEY = ""
+
+# 是否开启中文标题加强，以及标题增强的相关配置
+# 通过增加标题判断，判断哪些文本为标题，并在metadata中进行标记；
+# 然后将文本与往上一级的标题进行拼合，实现文本信息的增强。
+ZH_TITLE_ENHANCE = False

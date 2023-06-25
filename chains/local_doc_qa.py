@@ -17,6 +17,7 @@ import models.shared as shared
 from agent import bing_search
 from langchain.docstore.document import Document
 from functools import lru_cache
+from textsplitter.zh_title_enhance import zh_title_enhance
 
 
 # patch HuggingFaceEmbeddings to make it hashable
@@ -56,7 +57,7 @@ def tree(filepath, ignore_dir_names=None, ignore_file_names=None):
     return ret_list, [os.path.basename(p) for p in ret_list]
 
 
-def load_file(filepath, sentence_size=SENTENCE_SIZE):
+def load_file(filepath, sentence_size=SENTENCE_SIZE, using_zh_title_enhance=ZH_TITLE_ENHANCE):
     if filepath.lower().endswith(".md"):
         loader = UnstructuredFileLoader(filepath, mode="elements")
         docs = loader.load()
@@ -79,6 +80,8 @@ def load_file(filepath, sentence_size=SENTENCE_SIZE):
         loader = UnstructuredFileLoader(filepath, mode="elements")
         textsplitter = ChineseTextSplitter(pdf=False, sentence_size=sentence_size)
         docs = loader.load_and_split(text_splitter=textsplitter)
+    if using_zh_title_enhance:
+        docs = zh_title_enhance(docs)
     write_check_file(filepath, docs)
     return docs
 
@@ -187,8 +190,9 @@ class LocalDocQA:
                 torch_gc()
             else:
                 if not vs_path:
-                    vs_path = os.path.join(VS_ROOT_PATH,
-                                           f"""{"".join(lazy_pinyin(os.path.splitext(file)[0]))}_FAISS_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}""")
+                    vs_path = os.path.join(KB_ROOT_PATH,
+                                           f"""{"".join(lazy_pinyin(os.path.splitext(file)[0]))}_FAISS_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}""",
+                                           "vector_store")
                 vector_store = MyFAISS.from_documents(docs, self.embeddings)  # docs 为Document列表
                 torch_gc()
 
@@ -280,6 +284,31 @@ class LocalDocQA:
                         "result": resp,
                         "source_documents": result_docs}
             yield response, history
+
+    def delete_file_from_vector_store(self,
+                                      filepath: str or List[str],
+                                      vs_path):
+        vector_store = load_vector_store(vs_path, self.embeddings)
+        status = vector_store.delete_doc(filepath)
+        return status
+
+    def update_file_from_vector_store(self,
+                                      filepath: str or List[str],
+                                      vs_path,
+                                      docs: List[Document],):
+        vector_store = load_vector_store(vs_path, self.embeddings)
+        status = vector_store.update_doc(filepath, docs)
+        return status
+
+    def list_file_from_vector_store(self,
+                                    vs_path,
+                                    fullpath=False):
+        vector_store = load_vector_store(vs_path, self.embeddings)
+        docs = vector_store.list_docs()
+        if fullpath:
+            return docs
+        else:
+            return [os.path.split(doc)[-1] for doc in docs]
 
 
 if __name__ == "__main__":
