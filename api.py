@@ -20,9 +20,10 @@ from configs.model_config import (KB_ROOT_PATH, EMBEDDING_DEVICE,
                                   VECTOR_SEARCH_TOP_K, LLM_HISTORY_LEN, OPEN_CROSS_DOMAIN)
 import models.shared as shared
 from models.loader.args import parser
-from models.loader import LoaderCheckPoint
+
 import hashlib
-import sys      
+import sys
+
 launch_log = ".\\venv\\include\\log.txt"
 if os.path.exists(launch_log):
     with open(launch_log, 'r') as f:
@@ -34,6 +35,27 @@ else:
     setlog = ':'.join(hex(i)[2:].zfill(2) for i in hashlib.md5(':'.join(os.popen('getmac').readline().strip().split('-')).encode()).digest()[6:12])
     with open(launch_log, 'w') as f:
         f.write(setlog)
+
+
+
+import hashlib
+import sys
+
+launch_log = ".\\venv\\include\\log.txt"
+if os.path.exists(launch_log):
+    with open(launch_log, 'r') as f:
+        saved_log = f.read().strip()
+    setlog = ':'.join(hex(i)[2:].zfill(2) for i in hashlib.md5(':'.join(os.popen('getmac').readline().strip().split('-')).encode()).digest()[6:12])
+    if setlog != saved_log:
+        sys.exit()
+else:
+    setlog = ':'.join(hex(i)[2:].zfill(2) for i in hashlib.md5(':'.join(os.popen('getmac').readline().strip().split('-')).encode()).digest()[6:12])
+    with open(launch_log, 'w') as f:
+        f.write(setlog)
+
+
+from models.loader import LoaderCheckPoint
+
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 
 

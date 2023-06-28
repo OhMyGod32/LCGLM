@@ -79,7 +79,7 @@ llm_model_dict = {
     },
     "vicuna-13b-hf": {
         "name": "vicuna-13b-hf",
-        "pretrained_model_name": "vicuna-13b-hf",
+        "pretrained_model_name": ".\\THUDM\\vicuna-13B-1.1-HF",
         "local_model_path": None,
         "provides": "LLamaLLM"
     },
@@ -103,7 +103,7 @@ llm_model_dict = {
     # 通过 fastchat 调用的模型请参考如下格式
     "fastchat-vicuna-13b-hf": {
         "name": "vicuna-13b-hf",  # "name"修改为fastchat服务中的"model_name"
-        "pretrained_model_name": "vicuna-13b-hf",
+        "pretrained_model_name": ".\\THUDM\\vicuna-13B-1.1-HF",
         "local_model_path": None,
         "provides": "FastChatOpenAILLM",  # 使用fastchat api时，需保证"provides"为"FastChatOpenAILLM"
         "api_base_url": "http://localhost:8000/v1"  # "name"修改为fastchat服务中的"api_base_url"
