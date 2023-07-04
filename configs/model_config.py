@@ -10,7 +10,7 @@ logger.setLevel(logging.INFO)
 logging.basicConfig(format=LOG_FORMAT)
 
 # 在以下字典中修改属性值，以指定本地embedding模型存储位置
-# 如将 "text2vec": ".\\THUDM\\text2vec-large-chinese" 修改为 "text2vec": "User/Downloads/text2vec-large-chinese"
+# 如将 "text2vec": "GanymedeNil/text2vec-large-chinese" 修改为 "text2vec": "User/Downloads/text2vec-large-chinese"
 # 此处请写绝对路径
 embedding_model_dict = {
     "ernie-tiny": ".\\THUDM\\ernie-3.0-nano-zh",
@@ -64,7 +64,18 @@ llm_model_dict = {
         "local_model_path": None,
         "provides": "ChatGLM"
     },
-
+    "chatglm2-6b-int4": {
+        "name": "chatglm2-6b-int4",
+        "pretrained_model_name": ".\\THUDM\\chatglm2-6b-int4",
+        "local_model_path": None,
+        "provides": "ChatGLM"
+    },
+    "chatglm2-6b-int8": {
+        "name": "chatglm2-6b-int8",
+        "pretrained_model_name": ".\\THUDM\\chatglm2-6b-int8",
+        "local_model_path": None,
+        "provides": "ChatGLM"
+    },
     "chatyuan": {
         "name": "chatyuan",
         "pretrained_model_name": ".\\THUDM\\ChatYuan-large-v2",
@@ -79,7 +90,7 @@ llm_model_dict = {
     },
     "vicuna-13b-hf": {
         "name": "vicuna-13b-hf",
-        "pretrained_model_name": ".\\THUDM\\vicuna-13B-1.1-HF",
+        "pretrained_model_name": ".\\THUDM\\vicuna-13b-hf",
         "local_model_path": None,
         "provides": "LLamaLLM"
     },
@@ -103,7 +114,7 @@ llm_model_dict = {
     # 通过 fastchat 调用的模型请参考如下格式
     "fastchat-vicuna-13b-hf": {
         "name": "vicuna-13b-hf",  # "name"修改为fastchat服务中的"model_name"
-        "pretrained_model_name": ".\\THUDM\\vicuna-13B-1.1-HF",
+        "pretrained_model_name": "vicuna-13b-hf",
         "local_model_path": None,
         "provides": "FastChatOpenAILLM",  # 使用fastchat api时，需保证"provides"为"FastChatOpenAILLM"
         "api_base_url": "http://localhost:8000/v1"  # "name"修改为fastchat服务中的"api_base_url"
@@ -141,7 +152,7 @@ PROMPT_TEMPLATE = """已知信息：
 
 根据上述已知信息，简洁和专业的来回答用户的问题。如果无法从中得到答案，请说 “根据已知信息无法回答该问题” 或 “没有提供足够的相关信息”，不允许在答案中添加编造成分，答案请使用中文。 问题是：{question}"""
 
-# 缓存知识库数量
+# 缓存知识库数量,如果是ChatGLM2,ChatGLM2-int4,ChatGLM2-int8模型若检索效果不好可以调成’10’
 CACHED_VS_NUM = 1
 
 # 文本分句长度

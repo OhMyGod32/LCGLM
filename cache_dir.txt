@@ -1,0 +1,1 @@
+AutoModel.from_pretrained('bert-base-chinese', cache_dir='./')
