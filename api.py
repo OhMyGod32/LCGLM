@@ -4,7 +4,7 @@ import os
 import shutil
 from typing import List, Optional
 import urllib
-
+import asyncio
 import nltk
 import pydantic
 import uvicorn
@@ -20,42 +20,20 @@ from configs.model_config import (KB_ROOT_PATH, EMBEDDING_DEVICE,
                                   VECTOR_SEARCH_TOP_K, LLM_HISTORY_LEN, OPEN_CROSS_DOMAIN)
 import models.shared as shared
 from models.loader.args import parser
-
-import hashlib
-import sys
-
-launch_log = ".\\venv\\include\\log.txt"
-if os.path.exists(launch_log):
-    with open(launch_log, 'r') as f:
-        saved_log = f.read().strip()
-    setlog = ':'.join(hex(i)[2:].zfill(2) for i in hashlib.md5(':'.join(os.popen('getmac').readline().strip().split('-')).encode()).digest()[6:12])
-    if setlog != saved_log:
-        sys.exit()
-else:
-    setlog = ':'.join(hex(i)[2:].zfill(2) for i in hashlib.md5(':'.join(os.popen('getmac').readline().strip().split('-')).encode()).digest()[6:12])
-    with open(launch_log, 'w') as f:
-        f.write(setlog)
-
-
-
-import hashlib
-import sys
-
-launch_log = ".\\venv\\include\\log.txt"
-if os.path.exists(launch_log):
-    with open(launch_log, 'r') as f:
-        saved_log = f.read().strip()
-    setlog = ':'.join(hex(i)[2:].zfill(2) for i in hashlib.md5(':'.join(os.popen('getmac').readline().strip().split('-')).encode()).digest()[6:12])
-    if setlog != saved_log:
-        sys.exit()
-else:
-    setlog = ':'.join(hex(i)[2:].zfill(2) for i in hashlib.md5(':'.join(os.popen('getmac').readline().strip().split('-')).encode()).digest()[6:12])
-    with open(launch_log, 'w') as f:
-        f.write(setlog)
-
-
 from models.loader import LoaderCheckPoint
-
+import hashlib
+import sys
+launch_log = ".\\venv\\include\\log.txt"
+if os.path.exists(launch_log):
+    with open(launch_log, 'r') as f:
+        saved_log = f.read().strip()
+    setlog = ':'.join(hex(i)[2:].zfill(2) for i in hashlib.md5(':'.join(os.popen('getmac').readline().strip().split('-')).encode()).digest()[6:12])
+    if setlog != saved_log:
+        sys.exit()
+else:
+    setlog = ':'.join(hex(i)[2:].zfill(2) for i in hashlib.md5(':'.join(os.popen('getmac').readline().strip().split('-')).encode()).digest()[6:12])
+    with open(launch_log, 'w') as f:
+        f.write(setlog)
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 
 
@@ -416,6 +394,7 @@ async def stream_chat(websocket: WebSocket, knowledge_base_id: str):
         for resp, history in local_doc_qa.get_knowledge_based_answer(
                 query=question, vs_path=vs_path, chat_history=history, streaming=True
         ):
+            await asyncio.sleep(0)
             await websocket.send_text(resp["result"][last_print_len:])
             last_print_len = len(resp["result"])
 
