@@ -1,0 +1,5 @@
+AssertionError 断言错误
+
+是因为构建知识库的embedding模型需要与检索时所用的模型一致，修改embedding模型后，需要在重新用新选的embedding模型构建知识库后重新提问才行。
+
+删了之前的知识库, 重新建
