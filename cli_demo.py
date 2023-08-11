@@ -6,13 +6,10 @@ from models.loader.args import parser
 import models.shared as shared
 from models.loader import LoaderCheckPoint
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
-import hashlib
-import netifaces
-import hashlib
-import sys
 
 # Show reply with source text from input document
 REPLY_WITH_SOURCE = True
+
 
 def main():
 
@@ -38,7 +35,7 @@ def main():
         # filepath错误的返回为None, 如果直接用原先的vs_path,_ = local_doc_qa.init_knowledge_vector_store(filepath)
         # 会直接导致TypeError: cannot unpack non-iterable NoneType object而使得程序直接退出
         # 因此需要先加一层判断，保证程序能继续运行
-        temp,loaded_files = local_doc_qa.init_knowledge_vector_store(filepath)
+        temp, loaded_files = local_doc_qa.init_knowledge_vector_store(filepath)
         if temp is not None:
             vs_path = temp
             # 如果loaded_files和len(filepath)不一致，则说明部分文件没有加载成功
@@ -73,26 +70,6 @@ def main():
                            enumerate(resp["source_documents"])]
             print("\n\n" + "\n\n".join(source_text))
 
-def get_mac_address():
-    for interface in netifaces.interfaces():
-        if "loopback" not in interface.lower():
-            mac = netifaces.ifaddresses(interface).get(netifaces.AF_LINK)
-            if mac:
-                return mac[0]["addr"]
-    return None
-def get_mac_md5():
-    return hashlib.md5(get_mac_address().encode()).digest()[6:12]
-def get_hex_md5():
-    return ':'.join(f"{i:02x}" for i in get_mac_md5())
-launch_log = "./venv/include/log.txt"
-if os.path.exists(launch_log):
-    with open(launch_log, 'r') as f:
-        saved_log = f.read().strip()
-    if get_hex_md5() != saved_log:
-        sys.exit()
-else:
-    with open(launch_log, 'w') as f:
-        f.write(get_hex_md5())
 
 if __name__ == "__main__":
 #     # 通过cli.py调用cli_demo时需要在cli.py里初始化模型，否则会报错：

@@ -9,8 +9,9 @@ import torch
 import transformers
 from transformers import (AutoConfig, AutoModel, AutoModelForCausalLM,
                           AutoTokenizer, LlamaTokenizer)
-from configs.model_config import LLM_DEVICE
-
+from configs.model_config import LLM_DEVICE, LLM_MODEL, LORA_MODEL_PATH_BAICHUAN
+from peft import PeftModel
+from transformers.generation.utils import GenerationConfig
 
 class LoaderCheckPoint:
     """
@@ -68,6 +69,8 @@ class LoaderCheckPoint:
         self.load_in_8bit = params.get('load_in_8bit', False)
         self.bf16 = params.get('bf16', False)
 
+        self.is_chatgmlcpp = "chatglm2-cpp" == self.model_name
+
     def _load_model_config(self):
 
         if self.model_path:
@@ -119,20 +122,40 @@ class LoaderCheckPoint:
         # 如果加载没问题，但在推理时报错RuntimeError: CUDA error: CUBLAS_STATUS_ALLOC_FAILED when calling `cublasCreate(handle)`
         # 那还是因为显存不够，此时只能考虑--load-in-8bit,或者配置默认模型为`chatglm-6b-int8`
         if not any([self.llm_device.lower() == "cpu",
-                    self.load_in_8bit, self.is_llamacpp]):
+                    self.load_in_8bit, self.is_llamacpp, self.is_chatgmlcpp]):
 
             if torch.cuda.is_available() and self.llm_device.lower().startswith("cuda"):
                 # 根据当前设备GPU数量决定是否进行多卡部署
                 num_gpus = torch.cuda.device_count()
                 if num_gpus < 2 and self.device_map is None:
-                    model = (
-                        LoaderClass.from_pretrained(checkpoint,
-                                                    config=self.model_config,
-                                                    torch_dtype=torch.bfloat16 if self.bf16 else torch.float16,
-                                                    trust_remote_code=True)
-                        .half()
-                        .cuda()
-                    )
+                    # if LORA_MODEL_PATH_BAICHUAN is not None:
+                    if LORA_MODEL_PATH_BAICHUAN:
+                        if LLM_MODEL == "Baichuan-13B-Chat":
+                            model = AutoModelForCausalLM.from_pretrained(checkpoint, torch_dtype=torch.float16,
+                                                                         device_map="auto", trust_remote_code=True, )
+                            model.generation_config = GenerationConfig.from_pretrained(checkpoint)
+                            from configs.model_config import LLM_DEVICE, LORA_MODEL_PATH_BAICHUAN
+                            # if LORA_MODEL_PATH_BAICHUAN is not None:
+                            if LORA_MODEL_PATH_BAICHUAN:
+                                print("loading lora:{path}".format(path=LORA_MODEL_PATH_BAICHUAN))
+                                model = PeftModel.from_pretrained(
+                                    model,
+                                    LORA_MODEL_PATH_BAICHUAN,
+                                    torch_dtype=torch.float16,
+                                    device_map={"": LLM_DEVICE}
+                                )
+                            tokenizer = AutoTokenizer.from_pretrained(checkpoint, use_fast=False,
+                                                                      trust_remote_code=True)
+                            model.half().cuda()
+                    else:
+                        model = (
+                            LoaderClass.from_pretrained(checkpoint,
+                                                        config=self.model_config,
+                                                        torch_dtype=torch.bfloat16 if self.bf16 else torch.float16,
+                                                        trust_remote_code=True)
+                                .half()
+                                .cuda()
+                        )
                 # 支持自定义cuda设备
                 elif ":" in self.llm_device:
                     model = LoaderClass.from_pretrained(checkpoint,
@@ -176,11 +199,40 @@ class LoaderCheckPoint:
                     .to(self.llm_device)
                 )
 
-        elif self.is_llamacpp:
-
+        elif self.is_chatgmlcpp :
+            try:
+                import chatglm_cpp
+            except ImportError as exc:
+                import platform
+                if platform.system() == "Darwin":
+                    raise ValueError(
+                        "Could not import depend python package "
+                        "Please install it with `pip install chatglm-cpp`."
+                    ) from exc
+                else :
+                    raise SystemError(
+                        f"chatglm-cpp not support {platform.system()}."
+                    ) from exc
+                
+            model = (
+                    LoaderClass.from_pretrained(
+                        checkpoint,
+                        config=self.model_config,
+                        trust_remote_code=True)
+                )
+            # model = chatglm_cpp.Pipeline(f'{self.model_path}/{self.model_name}.bin')
+            tokenizer = getattr(model, "tokenizer")
+            return model, tokenizer
+        
+        elif self.is_llamacpp:    
+            # 要调用llama-cpp模型，如vicuma-13b量化模型需要安装llama-cpp-python库
+            # but!!! 实测pip install 不好使，需要手动从ttps://github.com/abetlen/llama-cpp-python/releases/下载
+            # 而且注意不同时期的ggml格式并不！兼！容!!!因此需要安装的llama-cpp-python版本也不一致，需要手动测试才能确定
+            # 实测ggml-vicuna-13b-1.1在llama-cpp-python 0.1.63上可正常兼容
+            # 不过！！！本项目模型加载的方式控制的比较严格，与llama-cpp-python的兼容性较差，很多参数设定不能使用，
+            # 建议如非必要还是不要使用llama-cpp
             try:
                 from llama_cpp import Llama
-
             except ImportError as exc:
                 raise ValueError(
                     "Could not import depend python package "
@@ -405,6 +457,7 @@ class LoaderCheckPoint:
                         self.model = self.model.to(device)
                     else:
                         self.model = self.model.cuda()
+            print("加载lora检查点成功.")
 
     def clear_torch_cache(self):
         gc.collect()
@@ -469,5 +522,5 @@ class LoaderCheckPoint:
                 print(e)
                 print("加载PrefixEncoder模型参数失败")
         # llama-cpp模型（至少vicuna-13b）的eval方法就是自身，其没有eval方法
-        if not self.is_llamacpp:
+        if not self.is_llamacpp and not self.is_chatgmlcpp:
             self.model = self.model.eval()

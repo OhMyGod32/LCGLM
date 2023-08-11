@@ -17,6 +17,9 @@ embedding_model_dict = {
     "ernie-base": ".\\THUDM\\ernie-3.0-base-zh",
     "text2vec-base": ".\\THUDM\\text2vec-base-chinese",
     "text2vec": ".\\THUDM\\text2vec-large-chinese",
+    "text2vec-base-multilingual": ".\\THUDM\\text2vec-base-multilingual",
+    "text2vec-base-chinese-sentence": ".\\THUDM\\text2vec-base-chinese-sentence",
+    "text2vec-base-chinese-paraphrase": ".\\THUDM\\text2vec-base-chinese-paraphrase",
     "m3e-small": ".\\THUDM\\m3e-small",
     "m3e-base": ".\\THUDM\\m3e-base",
 }
@@ -31,7 +34,7 @@ EMBEDDING_DEVICE = "cpu"
 # llm_model_dict 处理了loader的一些预设行为，如加载位置，模型名称，模型处理器实例
 # 在以下字典中修改属性值，以指定本地 LLM 模型存储位置
 # 如将 "chatglm-6b" 的 "local_model_path" 由 None 修改为 "User/Downloads/chatglm-6b"
-# 此处请写绝对路径
+# 此处请写绝对路径,且路径中必须包含repo-id的模型名称，因为FastChat是以模型名匹配的
 llm_model_dict = {
     "chatglm-6b-int4-qe": {
         "name": "chatglm-6b-int4-qe",
@@ -71,6 +74,19 @@ llm_model_dict = {
         "pretrained_model_name": ".\\THUDM\\chatglm2-6b",
         "local_model_path": None,
         "provides": "ChatGLMLLMChain"
+    },
+    "chatglm2-6b-32k": {
+        "name": "chatglm2-6b-32k",
+        "pretrained_model_name": ".\\THUDM\\chatglm2-6b-32k",
+        "local_model_path": None,
+        "provides": "ChatGLMLLMChain"
+    },
+    # 注：chatglm2-cpp已在mac上测试通过，其他系统暂不支持
+    "chatglm2-cpp": {
+        "name": "chatglm2-cpp",
+        "pretrained_model_name": "cylee0909/chatglm2cpp",
+        "local_model_path": None,
+        "provides": "ChatGLMCppLLMChain"
     },
     "chatglm2-6b-int4": {
         "name": "chatglm2-6b-int4",
@@ -114,10 +130,7 @@ llm_model_dict = {
         "local_model_path": None,
         "provides": "LLamaLLMChain"
     },
-    # 直接调用返回requests.exceptions.ConnectionError错误，需要通过huggingface_hub包里的snapshot_download函数
-    # 下载模型，如果snapshot_download还是返回网络错误，多试几次，一般是可以的，
-    # 如果仍然不行，则应该是网络加了防火墙(在服务器上这种情况比较常见)，基本只能从别的设备上下载，
-    # 然后转移到目标设备了.
+
     "bloomz-7b1": {
         "name": "bloomz-7b1",
         "pretrained_model_name": "bigscience/bloomz-7b1",
@@ -136,15 +149,15 @@ llm_model_dict = {
     },
     "baichuan-7b": {
         "name": "baichuan-7b",
-        "pretrained_model_name": ".\\THUDM\\baichuan-7B",
+        "pretrained_model_name": "baichuan-inc/baichuan-7B",
         "local_model_path": None,
         "provides": "MOSSLLMChain"
     },
-    "baichuan-13b": {
-        "name": "baichuan-13b",
-        "pretrained_model_name": ".\\THUDM\\baichuan-13B",
+    "Baichuan-13b-Chat": {
+        "name": "Baichuan-13b-Chat",
+        "pretrained_model_name": "baichuan-inc/Baichuan-13b-Chat",
         "local_model_path": None,
-        "provides": "MOSSLLMChain"
+        "provides": "BaichuanLLMChain"
     },
     # llama-cpp模型的兼容性问题参考https://github.com/abetlen/llama-cpp-python/issues/204
     "ggml-vicuna-13b-1.1-q5": {
@@ -226,12 +239,16 @@ BF16 = False
 # 本地lora存放的位置
 LORA_DIR = "loras/"
 
-# LLM lora path，默认为空，如果有请直接指定文件夹路径
-LLM_LORA_PATH = ""
-USE_LORA = True if LLM_LORA_PATH else False
+# LORA的名称，如有请指定为列表
+
+LORA_NAME = ""
+USE_LORA = True if LORA_NAME else False
 
 # LLM streaming reponse
 STREAMING = True
+
+# 直接定义baichuan的lora完整路径即可,"" != False
+LORA_MODEL_PATH_BAICHUAN=None
 
 # Use p-tuning-v2 PrefixEncoder
 USE_PTUNING_V2 = False
