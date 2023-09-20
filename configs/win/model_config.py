@@ -10,18 +10,18 @@ logger.setLevel(logging.INFO)
 logging.basicConfig(format=LOG_FORMAT)
 
 # 在以下字典中修改属性值，以指定本地embedding模型存储位置
-# 如将 "text2vec": "./THUDM/text2vec-large-chinese" 修改为 "text2vec": "User/Downloads/text2vec-large-chinese"
+# 如将 "text2vec": ".\\THUDM\\text2vec-large-chinese" 修改为 "text2vec": "User/Downloads/text2vec-large-chinese"
 # 此处请写绝对路径
 embedding_model_dict = {
-    "ernie-tiny": "./THUDM/ernie-3.0-nano-zh",
-    "ernie-base": "./THUDM/ernie-3.0-base-zh",
-    "text2vec-base": "./THUDM/text2vec-base-chinese",
-    "text2vec": "./THUDM/text2vec-large-chinese",
-    "text2vec-base-multilingual": "./THUDM/text2vec-base-multilingual",
-    "text2vec-base-chinese-sentence": "./THUDM/text2vec-base-chinese-sentence",
-    "text2vec-base-chinese-paraphrase": "./THUDM/text2vec-base-chinese-paraphrase",
-    "m3e-small": "./THUDM/m3e-small",
-    "m3e-base": "./THUDM/m3e-base",
+    "ernie-tiny": ".\\THUDM\\ernie-3.0-nano-zh",
+    "ernie-base": ".\\THUDM\\ernie-3.0-base-zh",
+    "text2vec-base": ".\\THUDM\\text2vec-base-chinese",
+    "text2vec": ".\\THUDM\\text2vec-large-chinese",
+    "text2vec-base-multilingual": ".\\THUDM\\text2vec-base-multilingual",
+    "text2vec-base-chinese-sentence": ".\\THUDM\\text2vec-base-chinese-sentence",
+    "text2vec-base-chinese-paraphrase": ".\\THUDM\\text2vec-base-chinese-paraphrase",
+    "m3e-small": ".\\THUDM\\m3e-small",
+    "m3e-base": ".\\THUDM\\m3e-base",
 }
 
 # Embedding model name
@@ -38,25 +38,25 @@ EMBEDDING_DEVICE = "cuda"
 llm_model_dict = {
     "chatglm-6b-int4-qe": {
         "name": "chatglm-6b-int4-qe",
-        "pretrained_model_name": "./THUDM/chatglm-6b-int4-qe",
+        "pretrained_model_name": ".\\THUDM\\chatglm-6b-int4-qe",
         "local_model_path": None,
         "provides": "ChatGLMLLMChain"
     },
     "chatglm-6b-int4": {
         "name": "chatglm-6b-int4",
-        "pretrained_model_name": "./THUDM/chatglm-6b-int4",
+        "pretrained_model_name": ".\\THUDM\\chatglm-6b-int4",
         "local_model_path": None,
         "provides": "ChatGLMLLMChain"
     },
     "chatglm-6b-int8": {
         "name": "chatglm-6b-int8",
-        "pretrained_model_name": "./THUDM/chatglm-6b-int8",
+        "pretrained_model_name": ".\\THUDM\\chatglm-6b-int8",
         "local_model_path": None,
         "provides": "ChatGLMLLMChain"
     },
     "chatglm-6b": {
         "name": "chatglm-6b",
-        "pretrained_model_name": "./THUDM/chatglm-6b",
+        "pretrained_model_name": ".\\THUDM\\chatglm-6b",
         "local_model_path": None,
         "provides": "ChatGLMLLMChain"
     },
@@ -71,13 +71,13 @@ llm_model_dict = {
     },
     "chatglm2-6b": {
         "name": "chatglm2-6b",
-        "pretrained_model_name": "./THUDM/chatglm2-6b",
+        "pretrained_model_name": ".\\THUDM\\chatglm2-6b",
         "local_model_path": None,
         "provides": "ChatGLMLLMChain"
     },
     "chatglm2-6b-32k": {
         "name": "chatglm2-6b-32k",
-        "pretrained_model_name": "./THUDM/chatglm2-6b-32k",
+        "pretrained_model_name": ".\\THUDM\\chatglm2-6b-32k",
         "local_model_path": None,
         "provides": "ChatGLMLLMChain"
     },
@@ -90,13 +90,13 @@ llm_model_dict = {
     },
     "chatglm2-6b-int4": {
         "name": "chatglm2-6b-int4",
-        "pretrained_model_name": "./THUDM/chatglm2-6b-int4",
+        "pretrained_model_name": ".\\THUDM\\chatglm2-6b-int4",
         "local_model_path": None,
         "provides": "ChatGLMLLMChain"
     },
     "chatglm2-6b-int8": {
         "name": "chatglm2-6b-int8",
-        "pretrained_model_name": "./THUDM/chatglm2-6b-int8",
+        "pretrained_model_name": ".\\THUDM\\chatglm2-6b-int8",
         "local_model_path": None,
         "provides": "ChatGLMLLMChain"
     },

@@ -10,7 +10,7 @@ from models.loader import LoaderCheckPoint
 import os
 import hashlib
 import sys
-import netifaces
+
 nltk.data.path = [NLTK_DATA_PATH] + nltk.data.path
 
 
@@ -308,27 +308,6 @@ def delete_vs(vs_id, chatbot):
         return gr.update(visible=True), gr.update(visible=False), gr.update(visible=False), \
                gr.update(visible=True), chatbot, gr.update(visible=True)
 
-def get_mac_address():
-    for interface in netifaces.interfaces():
-        if "loopback" not in interface.lower():
-            mac = netifaces.ifaddresses(interface).get(netifaces.AF_LINK)
-            if mac:
-                return mac[0]["addr"]
-    return None
-def get_mac_md5():
-    return hashlib.md5(get_mac_address().encode()).digest()[6:12]
-def get_hex_md5():
-    return ':'.join(f"{i:02x}" for i in get_mac_md5())
-launch_log = "./venv/include/log.txt"
-if os.path.exists(launch_log):
-    with open(launch_log, 'r') as f:
-        saved_log = f.read().strip()
-    if get_hex_md5() != saved_log:
-        sys.exit()
-else:
-    with open(launch_log, 'w') as f:
-        f.write(get_hex_md5())
-
 block_css = """.importantButton {
     background: linear-gradient(45deg, #7e0570,#5d1c99, #6e00ff) !important;
     border: none !important;
@@ -594,5 +573,5 @@ with gr.Blocks(css=block_css, theme=gr.themes.Default(**default_theme_args)) as 
  .launch(server_name='0.0.0.0',
          server_port=7860,
          show_api=False,
-         share=False,
+         share=True,
          inbrowser=True))
